@@ -278,7 +278,7 @@ public class PatientFormController extends PersonFormController {
 			} else {
 				//boolean isNew = (patient.getPatientId() == null);
 				boolean isError = false;
-				
+				setEnterpriseAttribute(patient);
 				try {
 					Context.getPatientService().savePatient(patient);
 				}
