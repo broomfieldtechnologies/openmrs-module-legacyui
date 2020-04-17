@@ -289,6 +289,7 @@ public class PersonFormController extends SimpleFormController {
 			
 			return new ModelAndView(new RedirectView(getSuccessView() + "?personId=" + person.getPersonId()));
 		} else {
+			setEnterpriseAttribute(person);
 			ps.savePerson(person);
 			
 			// If person is dead
@@ -833,5 +834,17 @@ public class PersonFormController extends SimpleFormController {
 		person.setBirthdateEstimated(birthdateEstimated);
 		
 	}
-	
+	public void setEnterpriseAttribute (Person person) {
+		if( Context.getAuthenticatedUser() != null
+				&& Context.getAuthenticatedUser().getPerson() != null
+				&& Context.getAuthenticatedUser().getPerson().getAttribute("Enterprise") != null) {
+			String enterpriseValue = Context.getAuthenticatedUser().getPerson().getAttribute("Enterprise").getValue();
+			if(StringUtils.isNotBlank(enterpriseValue)) {
+				PersonAttributeType personAttributeByName = Context.getPersonService()
+						.getPersonAttributeTypeByName("Enterprise");
+				PersonAttribute attribute = new PersonAttribute(personAttributeByName, enterpriseValue);
+				person.addAttribute(attribute);
+			}
+		}
+	}
 }
