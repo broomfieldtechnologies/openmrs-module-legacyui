@@ -183,16 +183,19 @@ public class LocationFormController extends SimpleFormController {
 		return enterpriseValue;
 	}
 
+	/**
+	 * Set the enterprise attribute on the location
+	 * @param location
+	 * @param locationService
+	 */
 	private void setLocationEnterpriseAttribute (Location location, LocationService locationService) {
 		String enterpriseVal = getDefaultEnterprise();
 		LocationAttributeType locationAttributeTypeByName = locationService.getLocationAttributeTypeByName("Enterprise");
 		LocationAttribute attr = new LocationAttribute();
-		//attr.setLocationAttributeId(locationAttributeTypeByName.getId());
 		attr.setValue(enterpriseVal);
 		attr.setAttributeType(locationAttributeTypeByName);
 		attr.setValueReferenceInternal(enterpriseVal);
 		attr.setLocation(location);
-		//location.addAttribute(attr);
 		location.setAttribute(attr);
 	}
 	void filterEnterpriseAttribute(List<LocationAttributeType> locationAttributeTypes) {
