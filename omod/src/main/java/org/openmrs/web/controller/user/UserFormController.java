@@ -19,6 +19,8 @@ import javax.servlet.http.HttpSession;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openmrs.Person;
+import org.openmrs.PersonAttribute;
+import org.openmrs.PersonAttributeType;
 import org.openmrs.PersonName;
 import org.openmrs.Provider;
 import org.openmrs.Role;
@@ -272,7 +274,9 @@ public class UserFormController {
 			if (errors.hasErrors()) {
 				return showForm(user.getUserId(), createNewPerson, user, model);
 			}
-			
+
+			setEnterpriseAttribute(user);
+
 			if (isNewUser(user)) {
 				us.createUser(user, password);
 			} else {
@@ -312,5 +316,22 @@ public class UserFormController {
 	private Boolean isNewUser(User user) {
 		return user == null ? true : user.getUserId() == null;
 	}
-	
+
+	/**
+	 * Set the enterprise attribute the associated person
+	 * @param account
+	 */
+	public void setEnterpriseAttribute (User account) {
+		if( Context.getAuthenticatedUser() != null
+				&& Context.getAuthenticatedUser().getPerson() != null
+				&& Context.getAuthenticatedUser().getPerson().getAttribute("Enterprise") != null) {
+			String enterpriseValue = Context.getAuthenticatedUser().getPerson().getAttribute("Enterprise").getValue();
+			if(!StringUtils.isEmpty(enterpriseValue)) {
+				PersonAttributeType personAttributeByName = Context.getPersonService()
+						.getPersonAttributeTypeByName("Enterprise");
+				PersonAttribute attribute = new PersonAttribute(personAttributeByName, enterpriseValue);
+				account.getPerson().addAttribute(attribute);
+			}
+		}
+	}
 }

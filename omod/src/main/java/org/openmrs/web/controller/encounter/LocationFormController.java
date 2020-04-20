@@ -11,6 +11,7 @@ package org.openmrs.web.controller.encounter;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -19,10 +20,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openmrs.Location;
 import org.openmrs.LocationAttribute;
+import org.openmrs.LocationAttributeType;
 import org.openmrs.LocationTag;
 import org.openmrs.api.APIException;
 import org.openmrs.api.LocationService;
@@ -68,7 +71,11 @@ public class LocationFormController extends SimpleFormController {
 		List<LocationTag> tags = Context.getLocationService().getAllLocationTags();
 		Collections.sort(tags, new MetadataComparator(Context.getLocale()));
 		ret.put("locationTags", tags);
-		ret.put("attributeTypes", Context.getLocationService().getAllLocationAttributeTypes());
+
+		List<LocationAttributeType> allAttributeTypes = Context.getLocationService().getAllLocationAttributeTypes();
+		filterEnterpriseAttribute(allAttributeTypes);
+
+		ret.put("attributeTypes", allAttributeTypes);
 		return ret;
 	}
 	
@@ -91,14 +98,17 @@ public class LocationFormController extends SimpleFormController {
 		if (Context.isAuthenticated()) {
 			try {
 				Location location = (Location) obj;
+				List<LocationAttributeType> allAttributeTypes = Context.getLocationService().getAllLocationAttributeTypes();
+				filterEnterpriseAttribute(allAttributeTypes);
 				WebAttributeUtil.handleSubmittedAttributesForType(location, errors, LocationAttribute.class, request,
-				    Context.getLocationService().getAllLocationAttributeTypes());
+						allAttributeTypes);
 				
 				if (errors.hasErrors()) {
 					return showForm(request, response, errors);
 				}
 				
 				LocationService locationService = Context.getLocationService();
+				setLocationEnterpriseAttribute(location, locationService);
 				
 				//if the user was editing the location
 				if (request.getParameter("saveLocation") != null) {
@@ -163,5 +173,40 @@ public class LocationFormController extends SimpleFormController {
 		
 		return location;
 	}
-	
+	private String getDefaultEnterprise() {
+		String enterpriseValue = "";
+		if( Context.getAuthenticatedUser() != null
+				&& Context.getAuthenticatedUser().getPerson() != null
+				&& Context.getAuthenticatedUser().getPerson().getAttribute("Enterprise") != null) {
+			enterpriseValue = Context.getAuthenticatedUser().getPerson().getAttribute("Enterprise").getValue();
+		}
+		return enterpriseValue;
+	}
+
+	/**
+	 * Set the enterprise attribute on the location
+	 * @param location
+	 * @param locationService
+	 */
+	private void setLocationEnterpriseAttribute (Location location, LocationService locationService) {
+		String enterpriseVal = getDefaultEnterprise();
+		LocationAttributeType locationAttributeTypeByName = locationService.getLocationAttributeTypeByName("Enterprise");
+		LocationAttribute attr = new LocationAttribute();
+		attr.setValue(enterpriseVal);
+		attr.setAttributeType(locationAttributeTypeByName);
+		attr.setValueReferenceInternal(enterpriseVal);
+		attr.setLocation(location);
+		location.setAttribute(attr);
+	}
+	void filterEnterpriseAttribute(List<LocationAttributeType> locationAttributeTypes) {
+		//Predicate<LocationAttributeType> condition = locAttrType -> locAttrType.getName().equals("Enterprise");
+		Iterator<LocationAttributeType> itr = locationAttributeTypes.iterator();
+		while(itr.hasNext()){
+			LocationAttributeType locAttrType = itr.next();
+			if(StringUtils.equals("Enterprise",locAttrType.getName())) {
+				itr.remove();
+				break;
+			}
+		}
+	}
 }
