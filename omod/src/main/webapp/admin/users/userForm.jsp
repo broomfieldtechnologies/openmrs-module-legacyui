@@ -157,6 +157,18 @@
 					<i><openmrs:message code="User.login.manner" /></i>
 				</td>
 			</tr>
+			<tr>
+				<td><openmrs:message code="User.email"/><span class="required">*</span></td></td>
+				<td>
+					<spring:bind path="user.email">
+						<input type="email" 
+								name="${status.expression}" 
+								value="${status.value}" 
+								autocomplete="off" />
+						<c:if test="${status.errorMessage != ''}"><span class="error">${status.errorMessage}</span></c:if>
+					</spring:bind>
+				</td>
+			</tr>
 			<c:if test="${modifyPasswords == true}">
 				<tr>
 				<td><openmrs:message code="User.usersPassword" /><span class="required">*</span></td>
